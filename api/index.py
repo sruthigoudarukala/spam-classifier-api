@@ -53,3 +53,47 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         response = json.dumps({"message": text, "prediction": result})
         self.wfile.write(response.encode())
+    def do_GET(self):
+        page = """<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMS Spam Checker</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:560px;margin:40px auto;padding:0 16px;color:#222}
+textarea{width:100%;height:110px;padding:10px;font-size:16px;box-sizing:border-box}
+button{margin-top:10px;padding:10px 20px;font-size:16px;cursor:pointer}
+#result{margin-top:20px;font-size:22px;font-weight:bold}
+</style>
+</head>
+<body>
+<h2>SMS Spam Checker</h2>
+<p>Type an SMS message and check if it is Spam or Ham.</p>
+<textarea id="msg" placeholder="Example: You won a free prize, call now"></textarea>
+<br>
+<button onclick="check()">Check</button>
+<div id="result"></div>
+<script>
+async function check(){
+  var text = document.getElementById('msg').value;
+  var out = document.getElementById('result');
+  out.textContent = 'Checking...';
+  try {
+    var r = await fetch('/api/index', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text})
+    });
+    var d = await r.json();
+    out.textContent = 'Result: ' + d.prediction;
+  } catch (e) {
+    out.textContent = 'Something went wrong. Try again.';
+  }
+}
+</script>
+</body>
+</html>"""
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(page.encode())
